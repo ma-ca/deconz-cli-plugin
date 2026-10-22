@@ -1,5 +1,1 @@
-Makefile
-Makefile.Debug
-Makefile.Release
-release
-.qmake.stash
+build/

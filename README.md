@@ -5,7 +5,7 @@ The deconz-cli-plugin provides an API to access devices with ZigBee Home Automat
 
 As hardware the [RaspBee](http://www.dresden-elektronik.de/funktechnik/solutions/wireless-light-control/raspbee?L=1) ZigBee Shield for Raspberry Pi is used to directly communicate with the ZigBee devices.
 
-The deconz-cli-plugin requires the [deCONZ software](http://www.dresden-elektronik.de/funktechnik/products/software/pc/deconz?L=1). 
+The deconz-cli-plugin requires the [deCONZ software](http://www.dresden-elektronik.de/funktechnik/products/software/pc/deconz?L=1).
 
 The deconz-cli-plugin opens a socket on port TCP 5008 and listens for incoming connections. The plugin allows to send commands and receive responses to and from ZigBee devices like Philips Hue lights. The plugin translates the incoming commands to APS-Data and passes the data to the RaspBee firmware.
 
@@ -22,7 +22,7 @@ Raspbian wheezy: comment out the following line in `/etc/inittab`
      #Spawn a getty on Raspberry Pi serial line
     T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100
 
-Raspian jessie: 
+Raspian jessie:
 
     sudo systemctl disable serial-getty@ttyAMA0.service
 
@@ -35,56 +35,28 @@ Reboot
 
 ## Installation and compilation steps
 
-##### Install deCONZ and development package
-
-1. Download deCONZ package
-
-
-    wget http://www.dresden-elektronik.de/rpi/deconz/deconz-latest.deb
-    -or-
-    wget http://www.dresden-elektronik.de/rpi/deconz/deconz-2.05.32.deb
-
-2. Install deCONZ package
-
-
-    sudo dpkg -i deconz-2.05.32-qt5.deb
-    sudo apt update
-    sudo apt install -f
-  
-3. Download deCONZ development package
-
-
-    wget http://www.dresden-elektronik.de/rpi/deconz-dev/deconz-dev-latest.deb
-    -or-
-    wget http://www.dresden-elektronik.de/rpi/deconz-dev/deconz-dev-2.05.32.deb
-
-4. Install deCONZ development package
-
-
-    sudo dpkg -i deconz-dev-2.05.32.deb
-    sudo apt install -f
-  
-6. (Optional) Install GCFFlasher tool to install new firmware or restart RaspBee
-
-
-    wget http://www.dresden-elektronik.de/rpi/gcfflasher/gcfflasher-latest.deb
-    sudo dpkg -i gcfflasher-latest.deb
-    sudo apt update
-    sudo apt install -f
-
+The deCONZ development package is not needed anymore. The deCONZ library headers are fetched
+automatically from [deconz-lib](https://github.com/dresden-elektronik/deconz-lib) during the CMake configure step.
 
 ##### Compile the plugin
- 
+
 1. Compile the plugin
 
+    ```
     git clone https://github.com/ma-ca/deconz-cli-plugin.git
     cd deconz-cli-plugin
-    qmake && make
+    cmake -S . -B build
+    cmake --build build
+    ```
+
+   Requires CMake >= 3.11, Qt5 or Qt6 (Core, Network, SerialPort) development packages, OpenSSL development
+   package, git and a C/C++ compiler. Use `-DDECONZ_LIB_GIT_TAG=<tag>` to select a specific deconz-lib version.
 
 2. Copy the plugin to the deConz plugins folder
 
-
-    sudo cp libdeconz_cli_plugin.so /usr/share/deCONZ/plugins
+    ```
+    sudo cp build/libdeconz_cli_plugin.so /usr/share/deCONZ/plugins
+    ```
 
 Start deConz (parameter --dbg-info=1 only needed for debug messages). It might be necessary to start with UI when starting and forming the ZigBee network for the first time. Thereafter the UI is not needed anymore.
 
@@ -96,20 +68,18 @@ with UI (requires X-server)
 -or-
 
     deCONZ --http-port=80
-    
+
     deCONZ --http-port=80 --dbg-info=1 --dbg-aps=2 --dbg-zcl=1
-    
+
 
 without UI
-	
+
     sudo systemctl enable deconz
     sudo systemctl start deconz
-  
+
 -or-
 
     deCONZ -platform minimal --http-port=80
-    
-    
 
 Hardware requirements
 ---------------------
@@ -129,17 +99,17 @@ Run netcat to connect to port 5008. Type `help` to show usage.
     nc localhost 5008
 
 
-Command | Description 
-------- | ----------- 
+Command | Description
+------- | -----------
 `r <shortaddr> <ep> <cluster> <attrid>` | read attributes
-`b <shortaddr> <ep>` | read basic attributes 
+`b <shortaddr> <ep>` | read basic attributes
 `b <shortaddr> <ep> <cluster>` | read basic attributes on cluster
 `m <profile> <cluster>` | send match descriptor request (discover cluster)
 `p <shortaddr>` | permit Joining on device (coordinator = 0)
-`zclattr <shortaddr> <ep> <cluster> <command>` | send ZCL attribute request 
-`zclcmd <shortaddr> <ep> <cluster> <command>`  | send ZCL command request 
-`zclcmdgrp <groupaddr> <ep> <cluster> <command>` | send ZCL command request to group 
-`zdpcmd <shortaddr> <cluster> <command>` | send ZDP command request 
+`zclattr <shortaddr> <ep> <cluster> <command>` | send ZCL attribute request
+`zclcmd <shortaddr> <ep> <cluster> <command>`  | send ZCL command request
+`zclcmdgrp <groupaddr> <ep> <cluster> <command>` | send ZCL command request to group
+`zdpcmd <shortaddr> <cluster> <command>` | send ZDP command request
 `zclattrmanu <shortaddr> <ep> <cluster> <manufacturer id> <command>` | send ZCL attribute request manufacturer specific
 `zclcmdmanu <shortaddr> <ep> <cluster> <manufacturer id> <command>`  | send ZCL command request manufacturer specific
 `sendtime <shortaddr> <ep>` | send ZCL time attributes to Time_Cluster 0x000A
@@ -151,10 +121,10 @@ Response | Description
 <-ZCL attribute report 0x001FEE00xxxxxxxx 0x0006 1 00 00 10 00 | ZCL attribute report (from cluster 0x0006)
 <-ZCL serverToClient 0x00124B00xxxxxxxx 1 for cluster 0x0500 10 00 00 00 00 00 | ZCL attribute (with extaddr)
 <-ZCL serverToClient 0x3B58 1 for cluster 0x0500 10 00 00 00 00 00 | ZCL attribute (with shortaddr)
-<-APS attr 0x001FEE00xxxxxxxx 5 0x0702 0x0000 0x25 0E DA 76 57 00 00 00 04 00 2A 00 00 00 | APS data 
- 
+<-APS attr 0x001FEE00xxxxxxxx 5 0x0702 0x0000 0x25 0E DA 76 57 00 00 00 04 00 2A 00 00 00 | APS data
+
     <-LQI [source addr] [neighborTableEntries] [start] [count] [extaddr] [shortaddr] [device type] [rxOnWhenIdle] [relationship] [permitJoin] [depth] [lqi]
-    <-APS attr [source extaddr] [endpoint] [cluster] [attributeid] [typeid] [attr value] [...more attributes] 
+    <-APS attr [source extaddr] [endpoint] [cluster] [attributeid] [typeid] [attr value] [...more attributes]
 
 
 
@@ -172,7 +142,7 @@ relationship | relationship 0 = neighbor is the parent, 1 = child, 2 = sibling, 
 permitJoin | permit Join 0 = neighbor is not accepting join requests, 1 = accepting join requests
 depth | The tree depth of the neighbor device
 lqi | The estimated link quality (range 0x00 - 0xff)
-  
+
 
 Supported ZigBee devices
 ========================
@@ -207,7 +177,7 @@ Reset ZigBee device to factory default
 Can I factory reset a Hue light with the Hue dimmer switch?
 Yes you can, press and hold the ON and OFF button simultaneously until the LED light on the dimmer switch turns green (Note: the lamp is blinking during this process. Hue Beyond and Hue Phoenix are excluded).
 
-Osram Lightify Light turn the light on and off five times and wait 5 seconds inbetween. 
+Osram Lightify Light turn the light on and off five times and wait 5 seconds inbetween.
 
 
 [Bitron Video](http://www.bitronvideo.eu/index.php/service/bitron-home/zb-registrierung/)
@@ -263,19 +233,19 @@ get group membership
 switch on / off
 
     zclcmd 0x6C25
-    
+
 read S2 ubisys config
 
     zclattr 0x6C25 232 0xFC00 000100
-    
+
     --> send OK
-    <-APS attr 0x001FEE0000001739 232 0xFC00 0x0001 0x48 41 04 00 06 00 0D 03 06 00 02 06 01 0D 04 06 00 02 06 00 03 03 06 00 02 06 01 03 04 06 00 02 
-    
+    <-APS attr 0x001FEE0000001739 232 0xFC00 0x0001 0x48 41 04 00 06 00 0D 03 06 00 02 06 01 0D 04 06 00 02 06 00 03 03 06 00 02 06 01 03 04 06 00 02
+
     zclattr 0xAF73 232 0xFC00 000100
-    
+
     --> send OK
-    <-APS attr 0x001FEE000000170A 232 0xFC00 0x0001 0x48 41 05 00 06 00 0D 03 06 00 02 09 00 07 03 05 00 05 01 00 01 06 00 0B 03 06 00 02 06 01 0D 04 06 00 02 06 01 03 04 06 00 02 
-    
+    <-APS attr 0x001FEE000000170A 232 0xFC00 0x0001 0x48 41 05 00 06 00 0D 03 06 00 02 09 00 07 03 05 00 05 01 00 01 06 00 0B 03 06 00 02 06 01 0D 04 06 00 02 06 01 03 04 06 00 02
+
 write S2 ubisys settings rocker switch (two
 stable positions).
 
@@ -300,28 +270,28 @@ zclattr 0x6C25 232 0xFC00 0201004841040006000D0306000206010D04060002060003030600
 </pre>
 
 read J1 ubisys with default configuration which is aimed at dual push-button
-operation (momentary, one stable position): 
-A short press will move up/down and stop when released, 
+operation (momentary, one stable position):
+A short press will move up/down and stop when released,
 while a long press will move up/down
-without stopping before the fully open or fully closed 
+without stopping before the fully open or fully closed
 position is reached, respectively.
 
     zclattr 0xD1F3 232 0xFC00 000100
     --> send OK
-    <-APS attr 0x001FEE000000253B 232 0xFC00 0x0001 0x48 41 04 00 06 00 0D 02 02 01 00 06 00 07 02 02 01 02 06 01 0D 02 02 01 01 06 01 07 02 02 01 02 
+    <-APS attr 0x001FEE000000253B 232 0xFC00 0x0001 0x48 41 04 00 06 00 0D 02 02 01 00 06 00 07 02 02 01 02 06 01 0D 02 02 01 01 06 01 07 02 02 01 02
 
-write J1 ubisys configuration: Here, the blind moves as long as either switch is turned on. 
+write J1 ubisys configuration: Here, the blind moves as long as either switch is turned on.
 As soon as it is turned off, motion stops.
 
 <pre>
-zclattr 0xD1F3 232 0xFC00 0201004841040006000D020201000600030202010206010D0202010106010302020102 
+zclattr 0xD1F3 232 0xFC00 0201004841040006000D020201000600030202010206010D0202010106010302020102
                           ..............----||-------|----||-------|----||-------|----||-------|
                           ..............----0D------00----<b>03</b>------02----0D------01----<b>03</b>------02
 
 0D = Transition: released -> pressed
 07 = Transition: pressed -> released
 03 = Transition: ignore->released
- 
+
 00 = ZCL Command: Move up/open
 01 = ZCL Command: Move down/close
 02 = ZCL Command: Stop
@@ -339,7 +309,7 @@ discover attributes
 
     zclattr 0x%04X %d %s 0C00000D
 
-    
+
 read reporting configuration
 
     zclattr 0x%04X %d %s 0800%s
@@ -357,5 +327,5 @@ read attributes 0x0000 (Temperature), 0x0012 (Heating Setpoint), 0x0025 (Operati
     zclattr 0xFFFF 1 0x0201 000000120025002900
     zclattr 0x8655 1 0x0201 000000120025002900
     zclattr 0xE087 1 0x0201 000000120025002900
-    
+
 

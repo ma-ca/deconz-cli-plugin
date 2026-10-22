@@ -7,6 +7,7 @@
 
 #include <QtPlugin>
 #include <QtNetwork>
+#include <QRandomGenerator>
 #include "deconz_cli_plugin.h"
 
 #define MAX_STR 1000
@@ -1089,7 +1090,7 @@ bool CliPlugin::sendZclAttributeGenericRequest(int shortaddr, int ep, int cluste
 	DBG_Printf(DBG_INFO, "-------------> sendZclReadAttributeRequest\n");
 
 	// generate and remember a new ZDP transaction sequence number
-	m_zclSeq = (uint8_t) qrand();
+	m_zclSeq = (uint8_t) QRandomGenerator::global()->generate();
 
 	uint8_t zclattrcmd = payload.at(0); // first byte is commandId
 	payload.remove(0,1);                // remaining bytes are payload
@@ -1206,7 +1207,7 @@ bool CliPlugin::sendZclCmdGenericRequest(deCONZ::Address dstAddress,
 		zclReq.setManufacturerCode(manu);
 	}
 	zclReq.setFrameControl(framecontrol);
-	zclReq.setSequenceNumber((uint8_t) qrand());
+	zclReq.setSequenceNumber((uint8_t) QRandomGenerator::global()->generate());
 	zclReq.setCommandId(commandId);
 	zclReq.setPayload(payload);
 
@@ -1434,7 +1435,7 @@ bool CliPlugin::sendZdpCmdRequest(deCONZ::Address dstAddress, uint16_t zdpcomman
     apsReq.setProfileId(ZDP_PROFILE_ID);
     apsReq.setClusterId(zdpcommand);
 
-	char zdpseq = (char) qrand(); // ZDP transaction sequence number
+	char zdpseq = (char) QRandomGenerator::global()->generate(); // ZDP transaction sequence number
 	asdu.prepend(zdpseq);         // insert at beginning
     apsReq.setAsdu(asdu);
     DBG_Printf(DBG_INFO, "APS ZDP Req id 0x%02X %s\n", apsReq.id(), asdu.toHex().toUpper().data());
@@ -1501,7 +1502,7 @@ bool CliPlugin::sendZclTimeAttributes(int shortaddr, int ep) {
 	int32_t dstshift = (int32_t) time_dst_shift;
 
 	// generate and remember a new ZDP transaction sequence number
-	m_zclSeq = (uint8_t) qrand();
+	m_zclSeq = (uint8_t) QRandomGenerator::global()->generate();
 
 	int cluster = 0x000A;  // Time cluster
 	uint8_t zclattrcmd = deCONZ::ZclWriteAttributesId;
