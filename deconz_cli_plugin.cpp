@@ -92,7 +92,7 @@ void CliPlugin::apsdeDataIndication(const deCONZ::ApsDataIndication &ind) {
 	memset(strout, '\0', MAX_STR);
 	memset(strtmp, '\0', TMP_STR);
 
-    const char *raw = ind.asdu().data();
+    const uint8_t *raw = reinterpret_cast<const uint8_t *>(ind.asdu().data());
 	for (i = 0; i < length; i++) {
 		char rawtmp[4];
 		memset(rawtmp, '\0', 4);
@@ -346,7 +346,7 @@ void CliPlugin::handleZdpSimpleResponse(const deCONZ::ApsDataIndication &ind) {
 	memset(strout, '\0', MAX_STR);
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
-	const char *simpleraw = ind.asdu().data();
+	const uint8_t *simpleraw = reinterpret_cast<const uint8_t *>(ind.asdu().data());
 	if (ind.asdu().length() > 2) {
 		simpleraw++;  // skip sequence number
 		uint8_t zdpstatus = *simpleraw++; //!< Result of a ZDP request.
@@ -413,7 +413,7 @@ void CliPlugin::handleZdpActiveEpResponse(const deCONZ::ApsDataIndication &ind) 
 	memset(strout, '\0', MAX_STR);
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
-	const char *epraw = ind.asdu().data();
+	const uint8_t *epraw = reinterpret_cast<const uint8_t *>(ind.asdu().data());
 	if (ind.asdu().length() > 2) {
 		epraw += 2;
 		uint16_t *nwkAddr = (uint16_t *) epraw; //!< NWK address of the active endpoints request
@@ -440,7 +440,7 @@ void CliPlugin::handleZdpMatchResponse(const deCONZ::ApsDataIndication &ind) {
 	memset(strout, '\0', MAX_STR);
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
-	const char *matchraw = ind.asdu().data();
+	const uint8_t *matchraw = reinterpret_cast<const uint8_t *>(ind.asdu().data());
 	if (ind.asdu().length() >= 2) {
 		if (ind.asdu().length() >= 6) {
 			matchraw += 2; // skip 2 bytes
@@ -476,7 +476,7 @@ void CliPlugin::handleZdpLqiResponse(const deCONZ::ApsDataIndication &ind) {
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
 	snprintf(strout, MAX_STR, "<-LQI %s %3d", getApsIndSrcAddr(ind).c_str(), ind.srcEndpoint());
-	const char *lqiraw = ind.asdu().data();
+	const uint8_t *lqiraw = reinterpret_cast<const uint8_t *>(ind.asdu().data());
 	if (ind.asdu().length() >= 27) {
 		lqiraw += 2 ; // skip 2 bytes
 		uint8_t neighborTableEntries = *lqiraw++;
@@ -520,7 +520,7 @@ void CliPlugin::handleZdpBindResponse(const deCONZ::ApsDataIndication &ind) {
 	memset(strout, '\0', MAX_STR);
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
-	const char *bindraw = ind.asdu().data();
+	const uint8_t *bindraw = reinterpret_cast<const uint8_t *>(ind.asdu().data());
 	if (ind.asdu().length() >= 18) {
 		bindraw += 2 ; // skip 2 bytes
 		uint8_t bindingTableEntries = *bindraw++;
@@ -584,7 +584,7 @@ void CliPlugin::handleZdpPowerResponse(const deCONZ::ApsDataIndication &ind) {
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
 	snprintf(strout, MAX_STR, "<-POWER %s ", getApsIndSrcAddr(ind).c_str());
-	const char *powraw = ind.asdu().data();
+	const uint8_t *powraw = reinterpret_cast<const uint8_t *>(ind.asdu().data());
 	if (ind.asdu().length() > 2) {
 		powraw++;  // skip sequence number
 		uint8_t zdpstatus = *powraw++; //!< Result of a ZDP request.
@@ -652,7 +652,7 @@ void CliPlugin::handleZdpNwkAddrResponse(const deCONZ::ApsDataIndication &ind) {
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
 	snprintf(strout, MAX_STR, "<-NWK %s ", getApsIndSrcAddr(ind).c_str());
-	const char *nwkraw = ind.asdu().data();
+	const uint8_t *nwkraw = reinterpret_cast<const uint8_t *>(ind.asdu().data());
 	if (ind.asdu().length() > 2) {
 		nwkraw++;  // skip sequence number
 		uint8_t zdpstatus = *nwkraw++; //!< Result of a ZDP request.
@@ -693,8 +693,8 @@ void CliPlugin::handleZclReadAttrbuteResponse(const deCONZ::ApsDataIndication &i
 	memset(strout, '\0', MAX_STR);
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
-	const char *respvalue = zclframe.payload().data();
-	const char *endvalue = respvalue + zclframe.payload().length();
+	const uint8_t *respvalue = reinterpret_cast<const uint8_t *>(zclframe.payload().data());
+	const uint8_t *endvalue = respvalue + zclframe.payload().length();
 	uint16_t *attrid = (uint16_t *) respvalue;
 	respvalue += 3;  // skip attribute id and status
 	bool writestrout = true;
@@ -709,7 +709,7 @@ void CliPlugin::handleZclReadAttrbuteResponse(const deCONZ::ApsDataIndication &i
 		}
 		if (0x42 == type) {  // type 0x42 string
 			uint8_t stringlength = *respvalue++;
-			const char *endstring = respvalue + stringlength;
+			const uint8_t *endstring = respvalue + stringlength;
 			while (respvalue < endstring) {
 				snprintf(strtmp, TMP_STR, "%c", *respvalue++);    // print char
 				strcat(strout, strtmp);
@@ -764,8 +764,8 @@ void CliPlugin::handleZclReportConfigResponse(const deCONZ::ApsDataIndication &i
 	memset(strout, '\0', MAX_STR);
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
-	const char *respvalue = zclframe.payload().data();
-	const char *endvalue = respvalue + zclframe.payload().length();
+	const uint8_t *respvalue = reinterpret_cast<const uint8_t *>(zclframe.payload().data());
+	const uint8_t *endvalue = respvalue + zclframe.payload().length();
 	snprintf(strout, MAX_STR, "<-REP config %s %d 0x%04X ",
 			getApsIndSrcAddr(ind).c_str(), ind.srcEndpoint(), ind.clusterId());
 	uint8_t zclstatus = *respvalue++;
@@ -815,8 +815,8 @@ void CliPlugin::handleZclReportAttributeResponse(const deCONZ::ApsDataIndication
 	memset(strout, '\0', MAX_STR);
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
-	const char *respvalue = zclframe.payload().data();
-	const char *endvalue = respvalue + zclframe.payload().length();
+	const uint8_t *respvalue = reinterpret_cast<const uint8_t *>(zclframe.payload().data());
+	const uint8_t *endvalue = respvalue + zclframe.payload().length();
 	snprintf(strout, MAX_STR,
 			"<-ZCL attribute report %s 0x%04X %d ", getApsIndSrcAddr(ind).c_str(), ind.clusterId(), ind.srcEndpoint());
 	while (respvalue < endvalue) {
@@ -842,8 +842,8 @@ void CliPlugin::handleZclDiscoverAttributesResponse(const deCONZ::ApsDataIndicat
 	memset(strout, '\0', MAX_STR);
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
-	const char *respvalue = zclframe.payload().data();
-	const char *endvalue = respvalue + zclframe.payload().length();
+	const uint8_t *respvalue = reinterpret_cast<const uint8_t *>(zclframe.payload().data());
+	const uint8_t *endvalue = respvalue + zclframe.payload().length();
 
 	uint8_t discoveryComplete = *respvalue; //!< A value of 0 indicates that there are some more attributes to be discovered
 	int x = snprintf(strout, MAX_STR, "<-ZCL discover attr %s for cluster 0x%04X discoveryComplete = %s\n ",
@@ -872,8 +872,8 @@ void CliPlugin::handleZclServerToClientResponse(const deCONZ::ApsDataIndication 
 	memset(strout, '\0', MAX_STR);
 	char strtmp[TMP_STR];
 	memset(strtmp, '\0', TMP_STR);
-	const char *respvalue = zclframe.payload().data();
-	const char *endvalue = respvalue + zclframe.payload().length();
+	const uint8_t *respvalue = reinterpret_cast<const uint8_t *>(zclframe.payload().data());
+	const uint8_t *endvalue = respvalue + zclframe.payload().length();
 
 	snprintf(strout, MAX_STR,
 			"<-ZCL serverToClient %s %d for cluster 0x%04X ",
