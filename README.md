@@ -230,9 +230,17 @@ get group membership
 
     zclcmd 0xC05E 11 0x0004 0200
 
-switch on / off
+switch off / on (cluster `0x0006`, endpoint 2, commands off/on/toggle `00`/`01`/`02`)
 
-    zclcmd 0x6C25
+    zclcmd 0xE471 2 0x0006 00  # turn off
+    zclcmd 0xE471 2 0x0006 01  # turn on
+    zclcmd 0xE471 2 0x0006 02  # toggle
+
+read attribute OnOff (id `0x0000`) on cluster `0x0006` endpoint 2, response `01` = bool true
+
+    zclattr 0xE471 2 0x0006 000000
+     --> send OK
+    <-APS attr 0xE471 2 0x0006 0x0000 0x10 01
 
 read S2 ubisys config
 
@@ -305,22 +313,80 @@ permit join
 
     p 0xFFFF
 
+simple descriptor request, payload NWKAddrOfInterest (16 bit) EndPoint (8 bit)
+
+    zdpcmd 0x%04X 0x0004 %04X%02X
+
+Example simple descriptor request (cluster command `0x0004`) EndPoint `01`
+
+    zdpcmd 0xBD13 0x0004 13BD01
+     --> send OK
+    <-CLUSTER 0xBD13 0xBD13 ep 0x01 profile 0x0104 deviceid 0x0002 deviceversion 0x00
+    <-CLUSTER 0xBD13 0xBD13 0x01 In  0x0000 BASIC_CLUSTER_ID
+    <-CLUSTER 0xBD13 0xBD13 0x01 In  0x0003 IDENTIFY_CLUSTER_ID
+    <-CLUSTER 0xBD13 0xBD13 0x01 In  0x0004 GROUPS_CLUSTER_ID
+    <-CLUSTER 0xBD13 0xBD13 0x01 In  0x0005 SCENES_CLUSTER_ID
+    <-CLUSTER 0xBD13 0xBD13 0x01 In  0x0006 ONOFF_CLUSTER_ID
+
+Example simple descriptor request (cluster command `0x0004`) EndPoint `02`
+
+    zdpcmd 0xBD13 0x0004 13BD02
+     --> send OK
+    <-CLUSTER 0xBD13 0xBD13 ep 0x02 profile 0x0104 deviceid 0x0002 deviceversion 0x00
+    <-CLUSTER 0xBD13 0xBD13 0x02 In  0x0000 BASIC_CLUSTER_ID
+    <-CLUSTER 0xBD13 0xBD13 0x02 In  0x0003 IDENTIFY_CLUSTER_ID
+    <-CLUSTER 0xBD13 0xBD13 0x02 In  0x0004 GROUPS_CLUSTER_ID
+    <-CLUSTER 0xBD13 0xBD13 0x02 In  0x0005 SCENES_CLUSTER_ID
+    <-CLUSTER 0xBD13 0xBD13 0x02 In  0x0006 ONOFF_CLUSTER_ID
+
 discover attributes
 
     zclattr 0x%04X %d %s 0C00000D
 
+Example discover attributes
+
+    zclattr 0xBD13 1 0x0006 0C00000D
+     --> send OK
+    <-ZCL discover attr 0xBD13 for cluster 0x0006 discoveryComplete = Yes
+     <-ZCL discover attr 0xBD13 0x0006 0x0000 0x10 Boolean
+     <-ZCL discover attr 0xBD13 0x0006 0xFFFD 0x21 16BitUint
 
 read reporting configuration
 
     zclattr 0x%04X %d %s 0800%s
 
+Example read reporting configuration on cluster `0x0006` on attribute `0x0000`
+
+    zclattr 0xBD13 1 0x0006 08000000
+     --> send OK
+    <-REP config 0xBD13 1 0x0006 dir 00 min 1 max 300 id 0x0000 type 0x10
+
 show bindings
 
     zdpcmd 0x%04X 0x0033 00
 
+Example show bindings (starting from index 00, starting from index 03)
+
+    zdpcmd 0xC9A6 0x0033 00
+     --> send OK
+    <-BIND 0xC9A6 5 0 3 0x0017880102035825 0x02 0x0406 0x00212EFFFF00893F 0x01
+    <-BIND 0xC9A6 5 0 3 0x0017880102035825 0x02 0x0400 0x00212EFFFF00893F 0x01
+    <-BIND 0xC9A6 5 0 3 0x0017880102035825 0x02 0x0402 0x00212EFFFF00893F 0x01
+
+    zdpcmd 0xC9A6 0x0033 03
+     --> send OK
+    <-BIND 0xC9A6 5 3 2 0x0017880102035825 0x02 0x0001 0x00212EFFFF00893F 0x01
+    <-BIND 0xC9A6 5 3 2 0x0017880102035825 0x02 0x0000 0x00212EFFFF00893F 0x01
+
 NWK_addr_req get short address (ext_addr in reverse byte order)
 
     zdpcmd 0xFFFD 0x0000 %s0000
+
+Example `0x0017880102035825` addr, reversed `2558030201881700`
+
+    zdpcmd 0xFFFF 0x0000 25580302018817000000
+     --> send OK
+    <-NWK 0xC9A6 0x0017880102035825 0xC9A6
 
 read attributes 0x0000 (Temperature), 0x0012 (Heating Setpoint), 0x0025 (Operation Mode) on cluster 0x0201 (Thermostat Cluster) on addresses 0xFFFF (broadcast), 0x8655, 0xE087
 
@@ -328,4 +394,10 @@ read attributes 0x0000 (Temperature), 0x0012 (Heating Setpoint), 0x0025 (Operati
     zclattr 0x8655 1 0x0201 000000120025002900
     zclattr 0xE087 1 0x0201 000000120025002900
 
+Example all (`0xFFFF`) window covering (cluster `0x0102`) command up (`0x00`)
 
+    zclcmd 0xFFFF 1 0x0102 00
+
+Example all (`0xFFFF`) window covering command down (`0x01`)
+
+    zclcmd 0xFFFF 1 0x0102 01
